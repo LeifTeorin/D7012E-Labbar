@@ -1,3 +1,4 @@
+import Distribution.Simple.Utils (xargs)
 list :: [Int]
 list = [-1, 2, -3, 4, -5]
 
@@ -35,9 +36,11 @@ sumofsets xs = (sum2 (nsubsets (length xs) xs))
     where nsubsets 1 xs = sublists 1 xs
           nsubsets n xs = (sublists n xs) ++ nsubsets (n-1) xs
 
-ksmallest :: [Int] -> Int -> [[Int]]
+ksmallest :: [Int] -> Int -> [(Int, [Int])]
 ksmallest [] k = []
-ksmallest xs k = []
+ksmallest xs k = pickfromsortedK (iSort (sumofsets xs)) k
+    where pickfromsortedK (x:xs) 1 = [x]
+          pickfromsortedK (x:xs) n = [x] ++ pickfromsortedK xs (n-1)
 
 main :: IO ()
-main = print(iSort (sumofsets list))
+main = print(ksmallest list 3)
