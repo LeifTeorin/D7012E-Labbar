@@ -4,11 +4,11 @@ list = [-1, 2, -3, 4, -5]
 list2 :: [[Int]]
 list2 = [[1,2,3], [4,5,6]]
 
-ins :: Int -> [Int] -> [Int]
+ins :: (Int, [Int]) -> [(Int, [Int])] -> [(Int, [Int])]
 ins x [] = [x]
-ins x (y : ys) = if x <= y then x : y : ys else y : ins x ys 
+ins (x, lst) ((y, lst2) : ys) = if x <= y then (x, lst) : (y, lst2) : ys else (y, lst2) : ins (x, lst) ys 
 
-iSort :: [Int] -> [Int]
+iSort :: [(Int, [Int])] -> [(Int, [Int])]
 iSort [] = []
 iSort (x : xs) = ins x (iSort xs)
 
@@ -40,4 +40,4 @@ ksmallest [] k = []
 ksmallest xs k = []
 
 main :: IO ()
-main = print(sumofsets list)
+main = print(iSort (sumofsets list))
