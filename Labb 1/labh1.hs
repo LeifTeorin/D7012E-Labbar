@@ -42,5 +42,12 @@ ksmallest xs k = pickfromsortedK (iSort (sumofsets xs)) k
     where pickfromsortedK (x:xs) 1 = [x]
           pickfromsortedK (x:xs) n = [x] ++ pickfromsortedK xs (n-1)
 
+smallestKset :: [Int] -> Int -> IO ()
+smallestKset _ 0 = putStr("no sets to pick :,(")
+smallestKset xs k = putStr(smallestKstring (ksmallest xs k) k)
+    where smallestKstring ((size, lst):xs) k = "size: " ++ show(size) ++ "  " ++ "subset: " ++ show(lst) ++ "\n" ++ (smallestKstring xs (k-1))
+          smallestKstring _ 0 = "\n"
+          smallestKstring [] _ = "\n"
+
 main :: IO ()
-main = print(ksmallest list 3)
+main = smallestKset list 0
