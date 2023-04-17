@@ -1,6 +1,7 @@
 -- Code to Haskell lab assignment 2 in the course D7012E by HÃ¥kan Jonsson
 
 import Data.Char
+import Text.Printf (printf)
 
 data EXPR = Const Int
      | Var String
@@ -83,7 +84,7 @@ diff v (Op "/" e1 e2) =
   Op "/" (Op "-" (Op "*" (diff v e1) e1) (Op "*" e1 (diff v e2))) (Op "*" e2 e2)
 diff v (App "sin" x) = Op "*" (diff v x) (App "cos" (x))
 diff v (App "cos" x) = Op "*" (simplify (Op "-" (Const 0) (diff v x))) (App "sin" (x))
-diff v (App "log" x) = Op "/" (Const 1) (x)
+diff v (App "log" x) = Op "/" (diff v x) x
 diff v (App "exp" x) = Op "*" (diff v x) (App "exp" (x))
 diff _ _ = error "can not compute the derivative"
 
@@ -106,7 +107,36 @@ simplify (Op oper left right) =
       (op,le,re)      -> Op op le re
 
 mkfun :: (EXPR, EXPR) -> (Float -> Float)
-mkfun (((Op "+" x (Const 2))), Var "x") = (\x -> x*x + 2.0)
+mkfun (body, Var v) = (\x -> eval body [(v, x)])
+mkfun (_, _) = error "Undefined"
 
-main = print(unparse (simplify (diff (Var "x") (parse "exp(cos(2*x))"))))
---main = print(Show(mkfun (parse "x+2", Var "x")))
+
+findzero :: String -> String -> Float -> Float
+findzero var body x = newtonstep (mkfun (f, v)) (mkfun ((diff v f), v)) x
+  where
+    f = parse body
+    v = parse var
+
+
+newtonstep :: (Float -> Float) -> (Float -> Float) -> Float -> Float
+newtonstep f f' x
+  | abs (x - x_next) < 0.0001 = x
+  | otherwise = newtonstep f f' x_next
+  where 
+    x_next = x - (f x) / (f' x)
+
+
+main = do
+  -- Part 1
+  print(parse "10+x")
+
+  -- Part 2
+  print(unparse (simplify (diff (Var "x") (parse "exp(cos(2*x))"))))
+
+  -- Part 3
+  print(mkfun (parse "x*x+2", Var "x") 3.0) -- f(x) = 11
+
+  -- Part 4
+  print(findzero "x" "x*x*x+x-1" 1.0)       -- 0.68232775.
+  print(findzero "y" "cos(y)*sin(y)" 2.0)   -- 1.5707964
+  print(findzero "z" "z-4" 0.0)     -- 4.0
