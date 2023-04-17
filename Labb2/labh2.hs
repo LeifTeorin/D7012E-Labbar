@@ -82,7 +82,7 @@ diff v (Op "*" e1 e2) =
 diff v (Op "/" e1 e2) =
   Op "/" (Op "-" (Op "*" (diff v e1) e1) (Op "*" e1 (diff v e2))) (Op "*" e2 e2)
 diff v (App "sin" x) = Op "*" (diff v x) (App "cos" (x))
-diff v (App "cos" x) = Op "*" (Op "-" (Const 0) (diff v x)) (App "sin" (x))
+diff v (App "cos" x) = Op "*" (simplify (Op "-" (Const 0) (diff v x))) (App "sin" (x))
 diff v (App "log" x) = Op "/" (Const 1) (x)
 diff v (App "exp" x) = Op "*" (diff v x) (App "exp" (x))
 diff _ _ = error "can not compute the derivative"
@@ -105,5 +105,8 @@ simplify (Op oper left right) =
       ("-",le,re)     -> if left==right then Const 0 else Op "-" le re
       (op,le,re)      -> Op op le re
 
+mkfun :: (EXPR, EXPR) -> (Float -> Float)
+mkfun (((Op "+" x (Const 2))), Var "x") = (\x -> x*x + 2.0)
 
 main = print(unparse (simplify (diff (Var "x") (parse "exp(cos(2*x))"))))
+--main = print(Show(mkfun (parse "x+2", Var "x")))
