@@ -25,9 +25,7 @@ sum2 ((i, j, x): xs) = [(sum' x, i, j, x)] ++ sum2 xs
 
 sublists :: Int -> [Int] -> [(Int, Int, [Int])]
 sublists n xs = take (length xs - n + 1) (sublists' 0 n xs)
-    where --sublists' i _ [x] = [(i, i, [x])]
---          sublists' i 1 (xs:rest) = (i, i, (take 1 (xs:rest))) : sublists' (i+1) 1 rest
-          sublists' i n (xs:rest) = (i, (i + (n-1)), (take n (xs:rest))) : sublists' (i+1) n rest
+    where sublists' i n (xs:rest) = (i, (i + (n-1)), (take n (xs:rest))) : sublists' (i+1) n rest
 
 sumofsets :: [Int] -> [(Int, Int, Int, [Int])]
 sumofsets [] = []
