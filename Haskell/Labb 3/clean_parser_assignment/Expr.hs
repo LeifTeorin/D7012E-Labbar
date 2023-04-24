@@ -26,6 +26,7 @@ module Expr(Expr, T, parse, fromString, value, toString) where
 import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
+import Language.Haskell.TH (Lit(IntegerL))
 
 data Expr = Num Integer | Var String | Add Expr Expr 
        | Sub Expr Expr | Mul Expr Expr | Div Expr Expr
@@ -72,11 +73,13 @@ shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num n) env = n
-value (Var v) env = case lookup v env of Just y -> y ; _ -> error (v ++ " undefined")
+value (Var v) env = case Dictionary.lookup v env of Just y -> y ; _ -> error (v ++ " undefined")
 value (Add left right) env = value left env + value right env
 value (Sub left right) env = value left env - value right env
 value (Mul left right) env = value left env * value right env
-value (Div left right) env = value left env / value right env
+value (Div left right) env = case value right env of
+        0 -> error "oh no division by zero"
+        _ -> div (value left env) (value right env) 
 
 instance Parse Expr where
     parse = expr
