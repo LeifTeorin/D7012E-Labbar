@@ -3,8 +3,7 @@ import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
 import qualified Expr
-import qualified Statement
-import qualified Statement as String
+
 type T = Statement
 
 data Statement = 
@@ -13,7 +12,7 @@ data Statement =
     | While Expr.T Statement -- while a condition is true, repeat one or more statements
     | Seq [Statement] -- takes a list of statements and represents a sequence of statements to be executed in order.
     | Skip -- represents an empty statement, typically used as a placeholder or a no-op.
-    | Print Expr.T -- takes an expression to be printed as output.
+    | Write Expr.T -- takes an expression to be printed as output.
     | Read String -- takes a string representing a variable name to be read as input.
     deriving Show
 
@@ -24,7 +23,7 @@ buildAss :: (String, Expr.T) -> Statement
 buildAss (v, e) = Assignment v e
 
 if_ :: Parser Statement
-if_ = accept "if" -# Expr.parse #- require "then" # parse #- require "else" # parse  >-> buildIf_
+if_ = accept "if" -# Expr.parse #- require "then" # parse #- accept "else" # parse  >-> buildIf_
 
 buildIf_ :: ((Expr.T, Statement), Statement) -> Statement
 buildIf_ ((c, t), e) = If c t e
@@ -36,7 +35,7 @@ buildWhile :: (Expr.T, Statement) -> Statement
 buildWhile (c, d) = While c d
 
 seq :: Parser Statement
-seq = require "begin" -# iter parse #- require "end" >-> buildSeq
+seq = accept "begin" -# iter parse #- require "end" >-> buildSeq
 
 buildSeq :: [Statement] -> Statement
 buildSeq = Seq 
@@ -47,11 +46,11 @@ skip = accept "skip" # require ";" >-> buildSkip
 buildSkip :: a -> Statement
 buildSkip _ = Skip
 
-print :: Parser Statement
-print = accept "print" -# Expr.parse #- require ";" >-> buildPrint
+write :: Parser Statement
+write = accept "write" -# Expr.parse #- require ";" >-> buildWrite
 
-buildPrint :: Expr.T -> Statement
-buildPrint = Print
+buildWrite :: Expr.T -> Statement
+buildWrite = Write
 
 read :: Parser Statement
 read = accept "read" -# word #- require ";" >-> buildRead
@@ -64,7 +63,20 @@ exec (If cond thenStmts elseStmts: stmts) dict input =
     if (Expr.value cond dict)>0 
     then exec (thenStmts: stmts) dict input
     else exec (elseStmts: stmts) dict input
+exec (Assignment var val: stms) dict input = exec stms (Dictionary.insert (var, Expr.value val dict) dict) input
+exec (While cond do_: stms) dict input = if (Expr.value cond dict)>0 then exec (do_: While cond do_: stms) dict input else exec stms dict input
+exec (Seq stmts: stms) dict input = exec stmts dict input ++ exec stms dict input
+exec (Skip: stms) dict input = exec stms dict input
+exec (Write e: stms) dict input = Expr.value e dict : exec stms dict input
+exec (Read s: stms) dict input = exec stms (Dictionary.insert (s, head input) dict) (tail input)
+
 
 instance Parse Statement where
-  parse = error "Statement.parse not implemented"
-  toString = error "Statement.toString not implemented"
+    parse = assignment ! skip ! Statement.read ! Statement.write ! skip ! while ! Statement.seq ! if_
+    toString (Assignment var val) = var ++ ":=" ++ Expr.toString val ++ ";\n" 
+    toString (While cond do_) = "while" ++ Expr.toString cond ++ "do\n" ++ toString do_
+    toString (If cond thenStmts elseStmts) = "if" ++ Expr.toString cond ++ "then\n" ++ toString thenStmts  ++ "else\n" ++ toString elseStmts
+    toString (Seq stmts) = "seq\n" ++ concatMap toString stmts ++ "end\n"
+    toString (Skip) = "skip;\n"
+    toString (Write e) = "write" ++ Expr.toString e ++ ";\n"
+    toString (Read s) = "read" ++ s ++ ";\n"
