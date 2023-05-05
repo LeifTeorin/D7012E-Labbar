@@ -1,0 +1,10 @@
+subset_sum([], [], 0).
+subset_sum([X|Xs], [X|Ys], Sum) :-
+    subset_sum(Xs, Ys, Rest),
+    Sum is X + Rest.
+subset_sum([_|Xs], Ys, Sum) :-
+    subset_sum(Xs, Ys, Sum).
+
+min_subset_sum(List, Subset) :-
+    findall((S, Sub), (subset_sum(List, Sub, S)), Results),
+    sort(Results, [(MinSum, Subset)|_]).

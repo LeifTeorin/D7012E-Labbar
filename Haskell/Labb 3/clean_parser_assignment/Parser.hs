@@ -61,7 +61,7 @@ accept :: String -> Parser String
 accept w = (token (chars (length w))) ? (==w)
 
 require :: String -> Parser String
-require w  = accept w ! err warning
+require w = accept w ! err warning
     where
         warning = "wrong" ++ w
 

@@ -14,6 +14,7 @@ data Statement =
     | Skip -- represents an empty statement, typically used as a placeholder or a no-op.
     | Write Expr.T -- takes an expression to be printed as output.
     | Read String -- takes a string representing a variable name to be read as input.
+    | Repeat Statement Expr.T -- repeat statement until condition
     deriving Show
 
 assignment :: Parser Statement
@@ -27,6 +28,12 @@ if_ = accept "if" -# Expr.parse #- require "then" # parse #- accept "else" # par
 
 buildIf_ :: ((Expr.T, Statement), Statement) -> Statement
 buildIf_ ((c, t), e) = If c t e
+
+repeat :: Parser Statement
+repeat = accept "repeat" -# parse #- require "until" # Expr.parse #- require ";" >-> buildRepeat
+
+buildRepeat :: (Statement, Expr.T) -> Statement
+buildRepeat (do_, cond) = Repeat do_ cond
 
 while :: Parser Statement
 while = accept "while" -# Expr.parse #- require "do" # parse >-> buildWhile
@@ -59,20 +66,27 @@ buildRead :: String -> Statement
 buildRead s = Read s
 
 exec :: [T] -> Dictionary.T String Integer -> [Integer] -> [Integer]
+exec [] _ _ = []
 exec (If cond thenStmts elseStmts: stmts) dict input = 
-    if (Expr.value cond dict)>0 
+    if (Expr.value cond dict) > 0
     then exec (thenStmts: stmts) dict input
     else exec (elseStmts: stmts) dict input
 exec (Assignment var val: stms) dict input = exec stms (Dictionary.insert (var, Expr.value val dict) dict) input
-exec (While cond do_: stms) dict input = if (Expr.value cond dict)>0 then exec (do_: While cond do_: stms) dict input else exec stms dict input
-exec (Seq stmts: stms) dict input = exec stmts dict input ++ exec stms dict input
+exec (While cond do_:stms) dict input = 
+    if (Expr.value cond dict) > 0
+    then exec (do_: While cond do_: stms) dict input
+    else exec stms dict input
+exec (Repeat do_ cond : stms) dict input = 
+    if (Expr.value cond dict) <= 0
+    then exec (do_: Repeat do_ cond : stms) dict input
+    else exec stms dict input
+exec (Seq stmts: stms) dict input = exec (stmts ++ stms) dict input
 exec (Skip: stms) dict input = exec stms dict input
 exec (Write e: stms) dict input = Expr.value e dict : exec stms dict input
 exec (Read s: stms) dict input = exec stms (Dictionary.insert (s, head input) dict) (tail input)
 
-
 instance Parse Statement where
-    parse = assignment ! skip ! Statement.read ! Statement.write ! skip ! while ! Statement.seq ! if_
+    parse = assignment ! skip ! Statement.read ! Statement.write ! skip ! while ! Statement.seq ! if_ ! Statement.repeat
     toString (Assignment var val) = var ++ ":=" ++ Expr.toString val ++ ";\n" 
     toString (While cond do_) = "while" ++ Expr.toString cond ++ "do\n" ++ toString do_
     toString (If cond thenStmts elseStmts) = "if" ++ Expr.toString cond ++ "then\n" ++ toString thenStmts  ++ "else\n" ++ toString elseStmts
@@ -80,3 +94,4 @@ instance Parse Statement where
     toString (Skip) = "skip;\n"
     toString (Write e) = "write" ++ Expr.toString e ++ ";\n"
     toString (Read s) = "read" ++ s ++ ";\n"
+    toString (Repeat do_ cond) = "repeat\n" ++ toString do_ ++ "until" ++ Expr.toString cond ++ "\n"
