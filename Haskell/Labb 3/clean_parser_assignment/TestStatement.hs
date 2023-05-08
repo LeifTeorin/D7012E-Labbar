@@ -17,4 +17,3 @@ p10 = fromString  "begin read x ; x := x + 1 ; write x; end"
 p11 = fromString  ("begin read n; fac:=1; " ++ s9 ++ " write fac; end")
 
 
-

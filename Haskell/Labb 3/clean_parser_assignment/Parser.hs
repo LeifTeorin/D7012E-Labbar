@@ -34,16 +34,10 @@ char' []= Nothing
 cons(a, b) = a:b
 
 (-#) :: Parser a -> Parser b -> Parser b
-(m -# n) cs = 
-    case n cs of
-    Nothing -> Nothing
-    Just(b, cs) -> Just(b, cs) 
+(-#) m n = (#) m n >-> snd
 
 (#-) :: Parser a -> Parser b -> Parser a
-(m #- n) cs = 
-    case m cs of
-    Nothing -> Nothing
-    Just(a, cs) -> Just(a, cs)
+(#-) m n = (#) m n >-> fst
 
 spaces :: Parser String
 spaces = iter $ (?) char isSpace
@@ -67,7 +61,7 @@ accept :: String -> Parser String
 accept w = (token (chars (length w))) ? (==w)
 
 require :: String -> Parser String
-require w  = accept w ! err warning
+require w = accept w ! err warning
     where
         warning = "wrong" ++ w
 

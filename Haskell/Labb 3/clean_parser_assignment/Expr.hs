@@ -83,4 +83,9 @@ value (Div left right) env = case value right env of
 
 instance Parse Expr where
     parse = expr
-    toString = shw 0
+    toString (Num num) = show num
+    toString (Var str) = str
+    toString (Add left right) = toString left ++ "+" ++ toString right
+    toString (Sub left right) = toString left ++ "-" ++ toString right
+    toString (Mul left right) = toString left ++ "*" ++ toString right
+    toString (Div left right) = toString left ++ "/" ++ toString right
