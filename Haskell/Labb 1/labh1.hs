@@ -1,3 +1,5 @@
+-- Hjalmar Olofsson Utsi
+
 list :: [Int]
 list = [-1, 2, -3, 4, -5]
 

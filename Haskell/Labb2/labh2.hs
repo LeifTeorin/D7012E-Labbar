@@ -1,4 +1,5 @@
 -- Code to Haskell lab assignment 2 in the course D7012E by HÃ¥kan Jonsson
+-- Hjalmar Olofsson Utsi
 
 import Data.Char
 
@@ -138,4 +139,4 @@ main = do
   -- Part 4
   print(findzero "x" "x*x*x+x-1" 1.0)       -- 0.68232775.
   print(findzero "y" "cos(y)*sin(y)" 2.0)   -- 1.5707964
-  print(findzero "z" "2*z*z-8" 1.0)         -- 4.0
+  print(findzero "z" "2*z*z-8" 1.0)         -- 2.0
