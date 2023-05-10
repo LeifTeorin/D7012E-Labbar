@@ -40,7 +40,7 @@ move(state(SK,BK,has,Items,Room), drop(package,Room), state(SK,BK,Room,Items2,Ro
     Items > 0,
     Items2 is Items - 1.
 
-solveR(state(_, _, has, _, r2), _,[done|[]]).
+solveR(state(_, _, has, _, r2), _,[]).
 
 solveR(State1, N, [Move| Trace2])  :-
     N > 0,
