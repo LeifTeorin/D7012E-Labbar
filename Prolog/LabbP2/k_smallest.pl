@@ -71,10 +71,31 @@ sublist(List, Size, I, J):-
     length(List, Len),
     Len is J - I + 1.
 
+sublist2(List, I, J, Sublist) :-
+    length(List, Len),
+    J < Len,
+    I =< J,
+    RestLen is Len - I,
+    length(FirstPart, I),
+    append(FirstPart, RestList, List),
+    length(LastPart, Lenlast),
+    length(RestList, RestLen),
+    Lenlast is Len - J - 1,
+    append(Sublist, LastPart, RestList).
 
+sublist2(_,_,_,[]) :- !.
 
+sublist_sum(List, I, J, Sum, Sublist) :-
+    sublist2(List, I, J, Sublist),
+    sumofset(Sublist, Sum).
 
-
+generate_sublists(List, Sublists) :-
+    length(List, Len),
+    findall(Sublist, (
+        between(0, Len, I),
+        between(I, Len, J),
+        sublist2(List, I, J, Sublist)
+    ), Sublists).
 
 
 

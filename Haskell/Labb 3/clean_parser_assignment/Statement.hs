@@ -77,9 +77,9 @@ exec (While cond do_:stms) dict input =
     then exec (do_: While cond do_: stms) dict input
     else exec stms dict input
 exec (Repeat do_ cond : stms) dict input = 
-    if (Expr.value cond dict) <= 0
-    then exec (do_: Repeat do_ cond : stms) dict input
-    else exec stms dict input
+    if (Expr.value cond dict) > 0
+    then exec (do_:stms) dict input
+    else exec (do_: Repeat do_ cond : stms) dict input
 exec (Seq stmts: stms) dict input = exec (stmts ++ stms) dict input
 exec (Skip: stms) dict input = exec stms dict input
 exec (Write e: stms) dict input = Expr.value e dict : exec stms dict input
@@ -87,6 +87,7 @@ exec (Read s: stms) dict input = exec stms (Dictionary.insert (s, head input) di
 
 instance Parse Statement where
     parse = assignment ! skip ! Statement.read ! Statement.write ! skip ! while ! Statement.seq ! if_ ! Statement.repeat
+    toString :: Statement -> String
     toString (Assignment var val) = var ++ ":=" ++ Expr.toString val ++ ";\n" 
     toString (While cond do_) = "while" ++ Expr.toString cond ++ "do\n" ++ toString do_
     toString (If cond thenStmts elseStmts) = "if" ++ Expr.toString cond ++ "then\n" ++ toString thenStmts  ++ "else\n" ++ toString elseStmts
