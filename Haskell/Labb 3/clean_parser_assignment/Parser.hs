@@ -1,3 +1,5 @@
+-- Hjalmar Olofsson Utsi
+
 module Parser(module CoreParser, T, digit, digitVal, chars, letter, err,
               lit, number, iter, accept, require, token,
               spaces, word, (-#), (#-)) where
@@ -15,21 +17,6 @@ err message cs = error (message++" near "++cs++"\n")
 
 iter :: Parser a -> Parser [a]  
 iter m = m # iter m >-> cons ! return [] 
-
---Exercise 1
-semicolon :: Parser Char
-semicolon (';':skip) = Just(';', skip)
-semicolon skip = Nothing
-
---Exercise 2
-becomes :: Parser String
-becomes ('=' : skip) = Just("=", skip)
-becomes _ = Nothing
-
---Exercise 3
-char' :: Parser Char
-char' (c:rest) = Just(c,rest)
-char' []= Nothing
 
 cons(a, b) = a:b
 
@@ -52,18 +39,14 @@ word :: Parser String
 word = token (letter # iter letter >-> cons)
 
 chars :: Int -> Parser String
-chars n = iterate' char n
-    where
-        iterate' m 0 = return []
-        iterate' m n = m # iterate' m (n-1) >-> cons 
+chars 0 = return []
+chars n = char # chars (n-1) >-> cons
 
 accept :: String -> Parser String
 accept w = (token (chars (length w))) ? (==w)
 
 require :: String -> Parser String
-require w = accept w ! err warning
-    where
-        warning = "wrong" ++ w
+require w = accept w ! err w
 
 lit :: Char -> Parser Char
 lit c = token char ? (==c)

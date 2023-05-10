@@ -1,8 +1,10 @@
+-- Hjalmar Olofsson Utsi
 module Statement(T, parse, toString, fromString, exec) where
 import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
 import qualified Expr
+import Language.Haskell.TH (TExp)
 
 type T = Statement
 
@@ -76,10 +78,7 @@ exec (While cond do_:stms) dict input =
     if (Expr.value cond dict) > 0
     then exec (do_: While cond do_: stms) dict input
     else exec stms dict input
-exec (Repeat do_ cond : stms) dict input = 
-    if (Expr.value cond dict) > 0
-    then exec (do_:stms) dict input
-    else exec (do_: Repeat do_ cond : stms) dict input
+exec (Repeat do_ cond : stms) dict input = exec (do_:If cond (Skip) (Repeat do_ cond): stms) dict input
 exec (Seq stmts: stms) dict input = exec (stmts ++ stms) dict input
 exec (Skip: stms) dict input = exec stms dict input
 exec (Write e: stms) dict input = Expr.value e dict : exec stms dict input
