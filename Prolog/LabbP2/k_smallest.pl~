@@ -4,9 +4,13 @@ sumofset([X|Rest], Sum):-
     sumofset(Rest, Restn),
     Sum is X + Restn.
 
-take(_,[],[]) :- !.
-take(0,L,L) :- !.
-take(1,[Head|_],[Head]):- !.
+shorten([_], []).
+shorten([X|Xs], [X | Ys]) :-
+    shorten(Xs, Ys).
+
+take(_,[],[]).
+take(0,_,[]).
+%take(1,[Head|_],[Head]):- !.
 take(K,[X|Xs],[X|Ys]) :-
     K > 1,
     K2 is K - 1,
@@ -20,95 +24,65 @@ drop(K,[_|Tail],Result) :-
     K2 is K - 1,
     drop(K2,Tail,Result).
 
-subsets([], [], _, _).
+subsets([], _, []).
+subsets(Lst, Index, Tup):-
+   sumofset(Lst, Sum),
+   I = Index,
+   length(Lst, LNGTH),
+   J is I + LNGTH -1,
+   FirstTup = [(Sum, I, J, Lst)],
+   shorten(Lst, ShorterLst),
+   subsets(ShorterLst, I, TupNew),
+   append(FirstTup, TupNew, Tup).
 
-subsets([E|Tail], [E|NTail], I, J):-
-    length([E|NTail], J),
-    NewI is I + 1,
-    prefix_subsets(Tail, NTail, NewI, J).
+getAllSubsets([], _, []).
+getAllSubsets([E|T], Start, Sublists):-
+    subsets([E|T], Start, Subs),
+    NextStart is Start + 1,
+    getAllSubsets(T, NextStart, AllSets),
+    append(Subs, AllSets, Sublists).
 
-subsets([_|Tail], NTail, I, J):-
-    subsets(Tail,NTail, I, J).
+insert((Sum, I, J, Set), [], [(Sum, I, J, Set)]).
+insert((Sum, I, J, Set), [(Sum2, I2, J2, Set2)|Lst], [(Sum, I, J, Set), (Sum2, I2, J2, Set2)|Lst]):-
+    Sum =< Sum2 !.
 
-prefix_subsets(_,[], _, _).
+insert((Sum, I, J, Set), [(Sum2, I2, J2, Set2)|Lst], [(Sum2, I2, J2, Set2)|Result]):-
+    Sum > Sum2,
+    insert((Sum, I, J, Set), Lst, Result).
 
-prefix_subsets([E|Tail], [E|NTail], I, J):-
-    length([E|NTail], J),
-    NewI is I + 1,
-    prefix_subsets(Tail, NTail, NewI, J).
+iSort([], []):-!.
+iSort((X|Xs), Res):-
+    iSort(Xs, TRes),
+    insert(X, TRes, Res).
 
-%Creates array of index combinations
-list_of_indexes(List,Result) :-
-    length(List,Len),
-    Lengt is Len - 1,
-    findall(Y, between(0,Lengt,Y), PermLst),
-    findall(Y, (perm(2,PermLst,X) ,msort(X,Y)), Ys), %create all permutations of that list, and sort it.
-    sort(Ys, Result). %sort it again to remove duplicates.
+kSmallest([], _, []).
+kSmallest(Lst, K, Sublists) :-
+   getAllSubsets(Lst, 0, Res),
+   iSort(Res, SortedSubs),
+   take(K, SortedSubs, Sublists).
 
-perm(1, Input, [Last]) :-
-    member(Last, Input).
-perm(N, Input, [First,Second|Perm]) :-
-    N > 1, N0 is N-1,
-    member(First, Input),
-    perm(N0, Input, [Second|Perm]).
-
-subsets_index(List, Subsets):-
-    length(List, Length),
-    subsets(List, Subsets, 0, Length).
-
-append([],L,L).
-append([H|T],L2,[H|L3]) :-
-    append(T,L2,L3).
-
-totalSize([],0).
-totalSize([sublist(_, Size,_,_)|T],S) :-
-    totalSize(T,S2), S is Size+S2.
-
-sizeOf(sublist(_,Size,_,_), Size).
-
-sublist(List, Size, I, J):-
-    sumofset(List, Size),
-    length(List, Len),
-    Len is J - I + 1.
-
-sublist2(List, I, J, Sublist) :-
-    length(List, Len),
-    J < Len,
-    I =< J,
-    RestLen is Len - I,
-    length(FirstPart, I),
-    append(FirstPart, RestList, List),
-    length(LastPart, Lenlast),
-    length(Restlist, RestLen),
-    Lenlast is Len - J - 1,
-    append(Sublist, LastPart, RestList).
-
-sublist2(_,_,_,[]) :- !.
-
-sublist_sum(List, I, J, Sum, Sublist) :-
-    sublist2(List, I, J, Sublist),
-    sumofset(Sublist, Sum).
-
-generate_sublists(List, Sublists) :-
-    length(List, Len),
-    findall(Sublist, (
-        between(0, Len, I),
-        between(I, Len, J),
-        sublist2(List, I, J, Sublist)
-    ), Sublists).
+stringOutput([(Sum, I, J, Lst)| Rest]) :-
+   write(Sum),
+   write('\t'),
+   write(I),
+   write('\t'),
+   write(J),
+   write('\t'),
+   write(Lst),
+   write('\n'),
+   stringOutput(Rest).
 
 
+smallestKset(_, 0, _) :-
+   write('no sets to pick :,('), !.
 
+smallestKset([], _, _) :-
+   write('That is an empty list, how did you tänkte där?'), !.
 
-
-
-
-
-
-
-
-
-
+smallestKset(List, K, Output) :-
+   kSmallest(List, K, Output),
+   write('Sum\ti\tj\tSublist\n'),
+   stringOutput(Output).
 
 
 
