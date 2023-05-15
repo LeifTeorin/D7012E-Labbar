@@ -50,7 +50,7 @@ insert((Sum, I, J, Set), [(Sum2, I2, J2, Set2)|Lst], [(Sum2, I2, J2, Set2)|Resul
     insert((Sum, I, J, Set), Lst, Result).
 
 iSort([], []).
-iSort(((Sum, I, J, Set)|Xs), Res):-
+iSort([(Sum, I, J, Set)|Xs], Res):-
     iSort(Xs, TempRes),
     insert((Sum, I, J, Set), TempRes, Res).
 
@@ -80,7 +80,9 @@ smallestKset([], _, _) :-
 
 smallestKset(List, K, Output) :-
    kSmallest(List, K, Output),
-   write('Sum\ti\tj\tSublist\n'),
+   write('Sum\ti\tj\tSublist\tk = '),
+   write(K),
+   write('\n'),
    stringOutput(Output).
 
 
