@@ -4,15 +4,14 @@ sumofset([X|Rest], Sum):-
     sumofset(Rest, Restn),
     Sum is X + Restn.
 
-shorten([_], []).
-shorten([X|Xs], [X | Ys]) :-
-    shorten(Xs, Ys).
+removeFirst([_], []).
+removeFirst([X|Xs], [X | Ys]) :-
+    removeFirst(Xs, Ys).
 
 take(_,[],[]).
 take(0,_,[]).
 %take(1,[Head|_],[Head]):- !.
 take(K,[X|Xs],[X|Ys]) :-
-    K > 1,
     K2 is K - 1,
     take(K2,Xs,Ys).
 
@@ -29,10 +28,10 @@ subsets(Lst, Index, Tup):-
    sumofset(Lst, Sum),
    I = Index,
    length(Lst, LNGTH),
-   J is I + LNGTH -1,
+   J is I + LNGTH - 1,
    FirstTup = [(Sum, I, J, Lst)],
-   shorten(Lst, ShorterLst),
-   subsets(ShorterLst, I, TupNew),
+   removeFirst(Lst, NewLst),
+   subsets(NewLst, I, TupNew),
    append(FirstTup, TupNew, Tup).
 
 getAllSubsets([], _, []).
@@ -50,16 +49,16 @@ insert((Sum, I, J, Set), [(Sum2, I2, J2, Set2)|Lst], [(Sum2, I2, J2, Set2)|Resul
     Sum > Sum2,
     insert((Sum, I, J, Set), Lst, Result).
 
-iSort([], []):-!.
-iSort((X|Xs), Res):-
-    iSort(Xs, TRes),
-    insert(X, TRes, Res).
+iSort([], []).
+iSort(((Sum, I, J, Set)|Xs), Res):-
+    iSort(Xs, TempRes),
+    insert((Sum, I, J, Set), TempRes, Res).
 
 kSmallest([], _, []).
 kSmallest(Lst, K, Sublists) :-
    getAllSubsets(Lst, 0, Res),
-   iSort(Res, SortedSubs),
-   take(K, SortedSubs, Sublists).
+   iSort(Res, Sorted),
+   take(K, Sorted, Sublists).
 
 stringOutput([(Sum, I, J, Lst)| Rest]) :-
    write(Sum),
@@ -77,7 +76,7 @@ smallestKset(_, 0, _) :-
    write('no sets to pick :,('), !.
 
 smallestKset([], _, _) :-
-   write('That is an empty list, how did you tänkte där?'), !.
+   write('That is an empty list, how did you tï¿½nkte dï¿½r?'), !.
 
 smallestKset(List, K, Output) :-
    kSmallest(List, K, Output),

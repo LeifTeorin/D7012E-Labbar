@@ -1,3 +1,5 @@
+% Hjalmar Olofsson Utsi
+
 %Move from R1 to R3
 move(state(SteelKey, holding, Package, Items, r1), walk(r1, r3), state(SteelKey, holding, Package, Items, r3)).
 
@@ -11,17 +13,17 @@ move(state(holding, BrassKey, Package, Items, r1), walk(r1, r2), state(holding, 
 move(state(holding, BrassKey, Package, Items, r2), walk(r2, r1), state(holding, BrassKey, Package, Items, r1)).
 
 %Grab Steel key
-move(state(Room,BrassKey,Package,Items,Room), grasp(steelKey,Room), state(holding,BrassKey,Package,Items2,Room)) :-
+move(state(Room,BrassKey,Package,Items,Room), grab(steelKey,Room), state(holding,BrassKey,Package,Items2,Room)) :-
     Items < 2,
     Items2 is Items + 1.
 
 %Grab Brass key
-move(state(SteelKey,Room,Package,Items,Room), grasp(brassKey,Room), state(SteelKey,holding,Package,Items2,Room)) :-
+move(state(SteelKey,Room,Package,Items,Room), grab(brassKey,Room), state(SteelKey,holding,Package,Items2,Room)) :-
     Items < 2,
     Items2 is Items + 1.
 
 %Grab Package
-move(state(SteelKey,BrassKey,Room,Items,Room), grasp(package,Room), state(SteelKey,BrassKey,holding,Items2,Room)) :-
+move(state(SteelKey,BrassKey,Room,Items,Room), grab(package,Room), state(SteelKey,BrassKey,holding,Items2,Room)) :-
     Items < 2,
     Items2 is Items + 1.
 
