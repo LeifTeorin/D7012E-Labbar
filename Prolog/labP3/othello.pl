@@ -173,9 +173,20 @@ printList([H | L]) :-
 %   - returns list MvList of all legal moves Plyr can make in State
 %
 
+getPlayerPos(_, [], _, _, []).
+getPlayerPos(Plyr, [Head | RestOfRow], X, Y, PlayerPositions):-
+
 
 moves(Plyr, State, MvList):-
 	
+
+checkNorth(Plyr, Enemy, State, X, Y, Valid):-
+	get(State, [X, Y], Enemy),
+	checkNorth(Plyr, Enemy, State, X, Y+1, Valid),
+	checkNorth(Enemy, Plyr, State, X, Y+1, Valid).
+
+chackNorth(Plyr, Enemy, State, X, T, Valid):-
+	get(State, [X, Y], .).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -187,6 +198,9 @@ moves(Plyr, State, MvList):-
 %     state) and NextPlayer (i.e. the next player who will move).
 %
 
+nextState(Plyr, Move, State, NewState, NextPlyr):-
+	validmove(Plyr, State, Proposed),
+	((Plyr = 2 , NextPlyr = 1) ; (Plyr = 1, NextPlyr = 2)),
 
 
 
@@ -198,7 +212,9 @@ moves(Plyr, State, MvList):-
 %% define validmove(Plyr,State,Proposed). 
 %   - true if Proposed move by Plyr is valid at State.
 
-
+validmove(Plyr, State, Proposed):-
+	moves(Plyr, State, MoveLst),
+	member(Proposed, MoveLst).
 
 
 
