@@ -147,7 +147,7 @@ terminal(State):-
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%showState(State)%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% given helper. DO NOT  change this. It's used by play.pl
+%% given helper. DO NOT  change this. Its used by play.pl
 %%
 
 showState( G ) :- 
@@ -182,10 +182,20 @@ moves(Plyr, State, MvList):-
 
 checkNorth(Plyr, Enemy, State, X, Y, Valid):-
 	get(State, [X, Y], Enemy),
-	checkNorth(Plyr, Enemy, State, X, Y+1, Valid),
-	checkNorth(Enemy, Plyr, State, X, Y+1, Valid).
+	checkNorth(Plyr, Enemy, State, X, Y+1, Valid).
 
-chackNorth(Plyr, Enemy, State, X, T, Valid):-
+checkNorth(Plyr, Enemy, State, X, Y, Valid):-
+	get(State, [X, Y], Enemy),
+	get(State, [X, Y+1], Plyr),
+	checkEndNorth(Plyr, Enemy, State, X, Y+1, Valid).
+
+checkEndNorth(Plyr, Enemy, State, X, Y, valid):-
+	get(State, [X, Y], Plyr),
+	get(State, [X, Y+1], .).
+
+checkEndNorth(_, _, _, _, _, notvalid).
+
+checkNorth(Plyr, Enemy, State, X, T, notvalid):-
 	get(State, [X, Y], .).
 
 

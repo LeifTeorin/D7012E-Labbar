@@ -1,5 +1,9 @@
 % Hjalmar Olofsson Utsi
 
+move(state(SteelKey, BrassKey, Package, Items, r3), drill(r3, r2), state(SteelKey, BrassKey, Package, Items, r2)).
+move(state(SteelKey, BrassKey, Package, Items, r2), drill(r2, r3), state(SteelKey, BrassKey, Package, Items, r3)).
+
+
 %Move from R1 to R3
 move(state(SteelKey, holding, Package, Items, r1), walk(r1, r3), state(SteelKey, holding, Package, Items, r3)).
 
