@@ -321,10 +321,10 @@ checkNorth(Plyr, Enemy, State, X, Y, Valid):-
 checkNorth(_, Enemy, State, X, Y, valid):-
 	NewY is Y-1,
 	get(State, [X, Y], Enemy),
-	get(State, [X, NewY], '.').
+	get(State, [X, NewY], .).
 
 checkNorth(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], '.').
+	get(State, [X, Y], .).
 
 checkNorth(Plyr, Enemy, State, X, Y, notvalid):-
 	NewY is Y-1,
