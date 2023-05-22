@@ -132,7 +132,7 @@ getmove(1,State,Move) :-
 getmove(2,State,Move) :- 
   showState(State), 
   writeln('Computer is moving...'),
-  MaxDepth is 6, % max depth is here set to 6
+  MaxDepth is 40, % max depth is here set to 6
   mmeval(2,State,_,Move,MaxDepth,SeF), 
   write('Computer move computed by searching '), 
   write(SeF), 

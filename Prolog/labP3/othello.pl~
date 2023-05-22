@@ -177,23 +177,32 @@ printList([H | L]) :-
 %
 
 getPlayerPos(_, [], _, _, []).
-getPlayerPositions(Plyr, [Head | RestOfRow], X, Y, PlayerPositions) :-
+getPlayerPos(Plyr, [Head | RestOfRow], X, Y, PlayerPositions) :-
 	Plyr = Head,
 	PlayerCoords = [[X, Y]],
 	NextX is X + 1,
-	getPlayerPositions(Plyr, RestOfRow, NextX, Y, NewCoords),
+	getPlayerPos(Plyr, RestOfRow, NextX, Y, NewCoords),
 	append(PlayerCoords, NewCoords, PlayerPositions).
+getPlayerPos(Plyr, [Head | RestOfRow], X, Y, PlayerPositions) :-
+	Plyr \= Head,
+	NextX is X + 1,
+	getPlayerPos(Plyr, RestOfRow, NextX, Y, PlayerPositions).
 
 getAllPlayerPos(_, [], _, []).
 getAllPlayerPos(Plyr, [FirstRow | RestOfRows], Y, Positions):-
-	getPlayerPositions(Plyr, FirstRow, 0, Y, PlayerRowPositions),
+	getPlayerPos(Plyr, FirstRow, 0, Y, PlayerRowPositions),
 	NextRow is Y + 1,
 	getAllPlayerPos(Plyr, RestOfRows, NextRow, RestRowPositions),
 	append(PlayerRowPositions, RestRowPositions, Positions).
 
-moves(Plyr, State, MvList):-
+moves(Plyr, State,[n]) :-
+	moves2(Plyr, State, []).
+moves(Plyr, State, MvList) :-
+	moves2(Plyr, State, MvList), !.
+
+moves2(Plyr, State, MvList):-
 	Plyr = 2,
-	getAllPlayerPos(Plyr, State, 0, Positions),
+	(   getAllPlayerPos(Plyr, State, 0, Positions),
 	movesNorth(Plyr, 1, State, Positions, NorthMoves),
 	movesSouth(Plyr, 1, State, Positions, SouthMoves),
 	movesWest(Plyr, 1, State, Positions, WestMoves),
@@ -201,7 +210,7 @@ moves(Plyr, State, MvList):-
 	movesNE(Plyr, 1, State, Positions, NEMoves),
 	movesSE(Plyr, 1, State, Positions, SEMoves),
 	movesNW(Plyr, 1, State, Positions, NWMoves),
-	movesSW(Plyr, 1, State, Positions, SWMoves),
+	movesSW(Plyr, 1, State, Positions, SWMoves)),
 	append(NorthMoves, SouthMoves, NorthSouth),
 	append(NorthSouth, WestMoves, MovesNSW),
 	append(MovesNSW, EastMoves, MovesWESN),
@@ -211,17 +220,17 @@ moves(Plyr, State, MvList):-
 	append(MovesWESNNESENW, SWMoves, MVListUnsorted),
 	sort(MVListUnsorted, MvList).
 
-moves(Plyr, State, MvList):-
+moves2(Plyr, State, MvList):-
 	Plyr = 1,
-	getAllPlayerPos(Plyr, State, 0, Positions),
-	movesNorth(Plyr, 2, State, Positions, NorthMoves),
-	movesSouth(Plyr, 2, State, Positions, SouthMoves),
-	movesWest(Plyr, 2, State, Positions, WestMoves),
-	movesEast(Plyr, 2, State, Positions, EastMoves),
-	movesNE(Plyr, 2, State, Positions, NEMoves),
-	movesSE(Plyr, 2, State, Positions, SEMoves),
-	movesNW(Plyr, 2, State, Positions, NWMoves),
-	movesSW(Plyr, 2, State, Positions, SWMoves),
+	(   getAllPlayerPos(Plyr, State, 0, Positions),
+	movesNorth(1, 2, State, Positions, NorthMoves),
+	movesSouth(1, 2, State, Positions, SouthMoves),
+	movesWest(1, 2, State, Positions, WestMoves),
+	movesEast(1, 2, State, Positions, EastMoves),
+	movesNE(1, 2, State, Positions, NEMoves),
+	movesSE(1, 2, State, Positions, SEMoves),
+	movesNW(1, 2, State, Positions, NWMoves),
+	movesSW(1, 2, State, Positions, SWMoves)),
 	append(NorthMoves, SouthMoves, NorthSouth),
 	append(NorthSouth, WestMoves, MovesNSW),
 	append(MovesNSW, EastMoves, MovesWESN),
@@ -233,233 +242,241 @@ moves(Plyr, State, MvList):-
 
 movesNorth(_, _, _, [], []).
 movesNorth(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkNorth(Plyr, Enemy, State, X, Y, valid),
+	checkNorth(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesNorth(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesNorth(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkNorth(Plyr, Enemy, State, X, Y, notvalid),
-	movesNorth(Plyr, Enemy, State, RestMoves, Moves).
+movesNorth(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesNorth(Plyr, Enemy, State, RestMoves, Moves),!.
 
 
 movesSouth(_, _, _, [], []).
 movesSouth(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkSouth(Plyr, Enemy, State, X, Y, valid),
+	checkSouth(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesSouth(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesSouth(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkSouth(Plyr, Enemy, State, X, Y, notvalid),
-	movesSouth(Plyr, Enemy, State, RestMoves, Moves).
+movesSouth(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesSouth(Plyr, Enemy, State, RestMoves, Moves),!.
+
 
 movesWest(_, _, _, [], []).
 movesWest(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkWest(Plyr, Enemy, State, X, Y, valid),
+	checkWest(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesWest(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesWest(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkWest(Plyr, Enemy, State, X, Y, notvalid),
-	movesWest(Plyr, Enemy, State, RestMoves, Moves).
+movesWest(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesWest(Plyr, Enemy, State, RestMoves, Moves),!.
+
 
 movesEast(_, _, _, [], []).
 movesEast(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkEast(Plyr, Enemy, State, X, Y, valid),
+	checkEast(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesEast(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesEast(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkEast(Plyr, Enemy, State, X, Y, notvalid),
-	movesEast(Plyr, Enemy, State, RestMoves, Moves).
+movesEast(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesEast(Plyr, Enemy, State, RestMoves, Moves),!.
+
 
 movesNE(_, _, _, [], []).
 movesNE(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkNE(Plyr, Enemy, State, X, Y, valid),
+	checkNE(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesNE(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesNE(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkNE(Plyr, Enemy, State, X, Y, notvalid),
-	movesNE(Plyr, Enemy, State, RestMoves, Moves).
+movesNE(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesNE(Plyr, Enemy, State, RestMoves, Moves),!.
+
 
 movesNW(_, _, _, [], []).
 movesNW(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkNW(Plyr, Enemy, State, X, Y, valid),
+	checkNW(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesNW(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesNW(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkNW(Plyr, Enemy, State, X, Y, notvalid),
-	movesNW(Plyr, Enemy, State, RestMoves, Moves).
+movesNW(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesNW(Plyr, Enemy, State, RestMoves, Moves),!.
+
 
 movesSE(_, _, _, [], []).
 movesSE(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkSE(Plyr, Enemy, State, X, Y, valid),
+	checkSE(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesSE(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesSE(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkSE(Plyr, Enemy, State, X, Y, notvalid),
-	movesSE(Plyr, Enemy, State, RestMoves, Moves).
+movesSE(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesSE(Plyr, Enemy, State, RestMoves, Moves),!.
+
 
 movesSW(_, _, _, [], []).
 movesSW(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkSW(Plyr, Enemy, State, X, Y, valid),
+	checkSW(Plyr, Enemy, State, X, Y, valid, NewMove),
 	movesSW(Plyr, Enemy, State, RestMoves, MovesRest),
-	append([X, Y], MovesRest, Moves).
+	append(NewMove, MovesRest, Moves).
 
-movesSW(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
-	checkSW(Plyr, Enemy, State, X, Y, notvalid),
-	movesSW(Plyr, Enemy, State, RestMoves, Moves).
+movesSW(Plyr, Enemy, State, [_| RestMoves], Moves):-
+	movesSW(Plyr, Enemy, State, RestMoves, Moves),!.
 
 
-checkNorth(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
+checkNorth(Plyr, Enemy, State, X, Y, Valid, Move):-
 	NewY is Y-1,
-	checkNorth(Plyr, Enemy, State, X, NewY, Valid).
+	get(State, [X, NewY], Enemy),
+	checkNorth(Plyr, Enemy, State, X, NewY, Valid, Move).
 
-checkNorth(_, Enemy, State, X, Y, valid):-
+checkNorth(_, Enemy, State, X, Y, valid, [[X, NewY]]):-
 	NewY is Y-1,
 	get(State, [X, Y], Enemy),
-	get(State, [X, NewY], .).
+	get(State, [X, NewY], '.').
 
-checkNorth(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
+checkNorth(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
 
-checkNorth(Plyr, Enemy, State, X, Y, notvalid):-
+checkNorth(Plyr, Enemy, State, X, Y, notvalid, []):-
 	NewY is Y-1,
 	get(State, [X, NewY], Enemy),
 	get(State, [X, Y], Plyr).
 
-checkSouth(Plyr, Enemy, State, X, Y, Valid):-
+
+
+checkSouth(Plyr, Enemy, State, X, Y, Valid, Move):-
+	NewY is Y+1,
+	get(State, [X, NewY], Enemy),
+	checkSouth(Plyr, Enemy, State, X, NewY, Valid, Move).
+
+checkSouth(_, Enemy, State, X, Y, valid, [[X, NewY]]):-
 	NewY is Y+1,
 	get(State, [X, Y], Enemy),
-	checkSouth(Plyr, Enemy, State, X, NewY, Valid).
+	get(State, [X, NewY], '.').
 
-checkSouth(Plyr, Enemy, State, X, Y, Valid):-
+checkSouth(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
+
+checkSouth(Plyr, Enemy, State, X, Y, notvalid, []):-
 	NewY is Y+1,
+	get(State, [X, NewY], Enemy),
+	get(State, [X, Y], Plyr).
+
+
+checkWest(Plyr, Enemy, State, X, Y, Valid, Move):-
+	NewX is X-1,
+	get(State, [NewX, Y], Enemy),
+	checkWest(Plyr, Enemy, State, NewX, Y, Valid, Move).
+
+checkWest(_, Enemy, State, X, Y, valid, [[NewX, Y]]):-
+	NewX is X-1,
 	get(State, [X, Y], Enemy),
-	get(State, [X, Y+1], Plyr),
-	checkEndSouth(Plyr, Enemy, State, X, NewY, Valid).
+	get(State, [NewX, Y], '.').
 
-checkSouth(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
+checkWest(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
 
-checkEndSouth(Plyr, _, State, X, Y, valid):-
+checkWest(Plyr, Enemy, State, X, Y, notvalid, []):-
+	NewX is X-1,
+	get(State, [NewX, Y], Enemy),
+	get(State, [X, Y], Plyr).
+
+
+checkEast(Plyr, Enemy, State, X, Y, Valid, Move):-
+	NewX is X+1,
+	get(State, [NewX, Y], Enemy),
+	checkEast(Plyr, Enemy, State, NewX, Y, Valid, Move).
+
+checkEast(_, Enemy, State, X, Y, valid, [[NewX, Y]]):-
+	NewX is X+1,
+	get(State, [X, Y], Enemy),
+	get(State, [NewX, Y], '.').
+
+checkEast(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
+
+checkEast(Plyr, Enemy, State, X, Y, notvalid, []):-
+	NewX is X+1,
+	get(State, [NewX, Y], Enemy),
+	get(State, [X, Y], Plyr).
+
+
+checkNE(Plyr, Enemy, State, X, Y, Valid, Move):-
 	NewY is Y-1,
-	get(State, [X, Y], Plyr),
-	get(State, [X, NewY], .).
+	NewX is X+1,
+	get(State, [NewX, NewY], Enemy),
+	checkNE(Plyr, Enemy, State, X, NewY, Valid, Move).
 
-checkEndSouth(_, _, _, _, _, notvalid).
-
-checkWest(Plyr, Enemy, State, X, Y, Valid):-
+checkNE(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
+	NewY is Y-1,
+	NewX is X+1,
 	get(State, [X, Y], Enemy),
-	checkWest(Plyr, Enemy, State, X-1, Y, Valid).
+	get(State, [NewX, NewY], '.').
 
-checkWest(Plyr, Enemy, State, X, Y, Valid):-
+checkNE(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
+
+checkNE(Plyr, Enemy, State, X, Y, notvalid, []):-
+	NewY is Y-1,
+	NewX is X+1,
+	get(State, [NewX, NewY], Enemy),
+	get(State, [X, Y], Plyr).
+
+
+checkNW(Plyr, Enemy, State, X, Y, Valid, Move):-
+	NewY is Y-1,
+	NewX is X-1,
+	get(State, [NewX, NewY], Enemy),
+	checkNW(Plyr, Enemy, State, X, NewY, Valid, Move).
+
+checkNW(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
+	NewY is Y-1,
+	NewX is X-1,
 	get(State, [X, Y], Enemy),
-	get(State, [X-1, Y], Plyr),
-	checkEndWest(Plyr, Enemy, State, X-1, Y, Valid).
+	get(State, [NewX, NewY], '.').
 
-checkWest(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
+checkNW(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
 
-checkEndWest(Plyr, _, State, X, Y, valid):-
-	get(State, [X, Y], Plyr),
-	get(State, [X-1, Y], .).
+checkNW(Plyr, Enemy, State, X, Y, notvalid, []):-
+	NewY is Y-1,
+	NewX is X-1,
+	get(State, [NewX, NewY], Enemy),
+	get(State, [X, Y], Plyr).
 
-checkEndWest(_, _, _, _, _, notvalid).
 
-checkEast(Plyr, Enemy, State, X, Y, Valid):-
+checkSE(Plyr, Enemy, State, X, Y, Valid, Move):-
+	NewY is Y+1,
+	NewX is X+1,
+	get(State, [NewX, NewY], Enemy),
+	checkSE(Plyr, Enemy, State, X, NewY, Valid, Move).
+
+checkSE(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
+	NewY is Y+1,
+	NewX is X+1,
 	get(State, [X, Y], Enemy),
-	checkEast(Plyr, Enemy, State, X+1, Y, Valid).
+	get(State, [NewX, NewY], '.').
 
-checkEast(Plyr, Enemy, State, X, Y, Valid):-
+checkSE(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
+
+checkSE(Plyr, Enemy, State, X, Y, notvalid, []):-
+	NewY is Y+1,
+	NewX is X+1,
+	get(State, [NewX, NewY], Enemy),
+	get(State, [X, Y], Plyr).
+
+
+checkSW(Plyr, Enemy, State, X, Y, Valid, Move):-
+	NewY is Y+1,
+	NewX is X-1,
+	get(State, [NewX, NewY], Enemy),
+	checkSW(Plyr, Enemy, State, X, NewY, Valid, Move).
+
+checkSW(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
+	NewY is Y+1,
+	NewX is X-1,
 	get(State, [X, Y], Enemy),
-	get(State, [X+1, Y], Plyr),
-	checkEndEast(Plyr, Enemy, State, X+1, Y, Valid).
+	get(State, [NewX, NewY], '.').
 
-checkEast(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
-
-checkEndEast(Plyr, _, State, X, Y, valid):-
-	get(State, [X, Y], Plyr),
-	get(State, [X+1, Y], .).
-
-checkEndEast(_, _, _, _, _, notvalid).
-
-checkNW(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	checkNW(Plyr, Enemy, State, X-1, Y+1, Valid).
-
-checkNW(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	get(State, [X-1, Y+1], Plyr),
-	checkEndNW(Plyr, Enemy, State, X-1, Y+1, Valid).
-
-checkNW(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
-
-checkEndNW(Plyr, _, State, X, Y, valid):-
-	get(State, [X, Y], Plyr),
-	get(State, [X-1, Y+1], .).
-
-checkEndNW(_, _, _, _, _, notvalid).
-
-checkNE(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	checkNE(Plyr, Enemy, State, X+1, Y+1, Valid).
-
-checkNE(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	get(State, [X+1, Y+1], Plyr),
-	checkEndNE(Plyr, Enemy, State, X+1, Y+1, Valid).
-
-checkNE(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
-
-checkEndNE(Plyr, _, State, X, Y, valid):-
-	get(State, [X, Y], Plyr),
-	get(State, [X+1, Y+1], .).
-
-checkEndNE(_, _, _, _, _, notvalid).
-
-checkSW(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	checkSW(Plyr, Enemy, State, X-1, Y-1, Valid).
-
-checkSW(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	get(State, [X-1, Y-1], Plyr),
-	checkEndSW(Plyr, Enemy, State, X-1, Y-1, Valid).
-
-checkSW(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
-
-checkEndSW(Plyr, _, State, X, Y, valid):-
-	get(State, [X, Y], Plyr),
-	get(State, [X-1, Y-1], .).
-
-checkEndSW(_, _, _, _, _, notvalid).
-
-checkSE(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	checkSE(Plyr, Enemy, State, X+1, Y-1, Valid).
-
-checkSE(Plyr, Enemy, State, X, Y, Valid):-
-	get(State, [X, Y], Enemy),
-	get(State, [X+1, Y-1], Plyr),
-	checkEndSE(Plyr, Enemy, State, X+1, Y-1, Valid).
-
-checkSE(_, _, State, X, Y, notvalid):-
-	get(State, [X, Y], .).
-
-checkEndSE(Plyr, _, State, X, Y, valid):-
-	get(State, [X, Y], Plyr),
-	get(State, [X+1, Y-1], .).
-
-checkEndSE(_, _, _, _, _, notvalid).
-
+checkSW(_, _, State, X, Y, notvalid, []):-
+	get(State, [X, Y], '.').
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -473,8 +490,8 @@ checkEndSE(_, _, _, _, _, notvalid).
 setEnemiesEast(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewX = X+1,
+	Enemy \= '.',
+	NewX is X+1,
 	setEnemiesEast(Plyr, State, [NewX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesEast(Plyr, State, [X,Y], NewState) :-
@@ -485,8 +502,8 @@ setEnemiesEast(Plyr, State, [X,Y], NewState) :-
 setEnemiesWest(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewX = X-1,
+	Enemy \= '.',
+	NewX is X-1,
 	setEnemiesWest(Plyr, State, [NewX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesWest(Plyr, State, [X, Y], NewState) :-
@@ -497,8 +514,8 @@ setEnemiesWest(Plyr, State, [X, Y], NewState) :-
 setEnemiesNorth(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewY = Y-1,
+	Enemy \= '.',
+	NewY is Y-1,
 	setEnemiesNorth(Plyr, State, [X, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesNorth(Plyr, State, [X,Y], NewState) :-
@@ -510,7 +527,7 @@ setEnemiesSouth(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= '.',
-	NewY = Y+1,
+	NewY is Y+1,
 	setEnemiesSouth(Plyr, State, [X, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesSouth(Plyr, State, [X, Y], NewState) :-
@@ -522,8 +539,9 @@ setEnemiesSE(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewX = X+1, NewY = Y+1,
+	Enemy \= '.',
+	NewX is X+1,
+	NewY is Y+1,
 	setEnemiesSE(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesSE(Plyr, State, [X,Y], NewState) :-
@@ -534,8 +552,9 @@ setEnemiesSE(Plyr, State, [X,Y], NewState) :-
 setEnemiesSW(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewX = X-1, NewY = Y+1,
+	Enemy \= '.',
+	NewX is X-1,
+	NewY is Y+1,
 	setEnemiesSW(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesSW(Plyr, State, [X,Y], NewState) :-
@@ -546,9 +565,9 @@ setEnemiesSW(Plyr, State, [X,Y], NewState) :-
 setEnemiesNE(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewX = X+1,
-	NewY = Y-1,
+	Enemy \= '.',
+	NewX is X+1,
+	NewY is Y-1,
 	setEnemiesNE(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesNE(Plyr, State, [X,Y], NewState) :-
@@ -559,8 +578,9 @@ setEnemiesNE(Plyr, State, [X,Y], NewState) :-
 setEnemiesNW(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
-	NewX = X-1, NewY = Y-1,
+	Enemy \= '.',
+	NewX is X-1,
+	NewY = Y-1,
 	setEnemiesNW(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 setEnemiesNW(Plyr, State, [X,Y], NewState) :-
@@ -569,67 +589,71 @@ setEnemiesNW(Plyr, State, [X,Y], NewState) :-
 	NewState = State, !.
 
 makeMoveEast(Plyr, [X, Y], State, NewState) :-
-	NextX = X+1,
+	NextX is X+1,
 	get(State, [NextX, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesEast(Plyr, State, [NextX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveWest(Plyr, [X, Y], State, NewState) :-
-	NextX = X-1,
+	NextX is X-1,
 	get(State, [NextX, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesWest(Plyr, State, [NextX, Y], PartState),
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNorth(Plyr, [X, Y], State, NewState) :-
-	NextY = Y-1,
+	NextY is Y-1,
 	get(State, [X, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesNorth(Plyr, State, [X, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveSouth(Plyr, [X, Y], State, NewState) :-
-	NextY = Y+1,
+	NextY is Y+1,
 	get(State, [X, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	 setEnemiesSouth(Plyr, State, [X, NextY], PartState), !,
 	 set(PartState, NewState, [X, Y], Plyr).
 
 
 makeMoveSE(Plyr, [X, Y], State, NewState) :-
-	NextX = X+1, NextY = Y+1,
+	NextX is X+1,
+	NextY is Y+1,
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesSE(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveSW(Plyr, [X, Y], State, NewState) :-
-	NextX = X-1, NextY = Y+1,
+	NextX is X-1,
+	NextY is Y+1,
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesSW(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNE(Plyr, [X, Y], State, NewState) :-
-	NextX = X+1, NextY = Y-1,
+	NextX is X+1,
+	NextY is Y-1,
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesNE(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNW(Plyr, [X, Y], State, NewState) :-
-	NextX = X-1, NextY = Y-1,
+	NextX is X-1,
+	NextY is Y-1,
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= .,
+	Enemy \= '.',
 	setEnemiesNW(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
@@ -672,7 +696,7 @@ getState(Plyr, _, State, State, NextPlyr) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%validmove(Plyr,State,Proposed)%%%%%%%%%%%%%%%%%%%%
 %%
 %% define validmove(Plyr,State,Proposed).
-%   - true if Proposed move by Plyr is valid at State.
+%   - true if Proposed move by Plyr isvalid at State.
 
 validmove(Plyr, State, Proposed):-
 	moves(Plyr, State, MoveLst),
@@ -692,14 +716,14 @@ validmove(Plyr, State, Proposed):-
 %          the value of state (see handout on ideas about
 %          good heuristics.
 
-h(State, -40):-
-	winner(State, 1), !.
+h(State, -39):-
+	winner(State, 1).
 
-h(State, 40) :-
-	winner(State, 2), !.
+h(State, 39) :-
+	winner(State, 2).
 
 h(State, 0) :-
-	tie(State), !.
+	tie(State).
 
 h(State, Val) :-
 	score(State, 1, Player1Score),
