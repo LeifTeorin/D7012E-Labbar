@@ -487,6 +487,8 @@ checkSW(_, _, State, X, Y, notvalid, []):-
 %     state) and NextPlayer (i.e. the next player who will move).
 %
 
+
+
 setEnemiesEast(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
@@ -660,36 +662,46 @@ makeMoveNW(Plyr, [X, Y], State, NewState) :-
 
 nextState(Plyr, Move, State, NewState, NextPlyr):-
 	validmove(Plyr, State, Move),
-	((Plyr = 2 , NextPlyr = 1) ; (Plyr = 1, NextPlyr = 2)),
+	nextPlayer(Plyr, NextPlyr),
 	getState(Plyr, Move, State, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	 makeMoveEast(Plyr, Move, State, NewState1),
 	 getState(Plyr, Move, NewState1, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveWest(Plyr, Move, State, NewState2),
 	getState(Plyr, Move, NewState2, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveNorth(Plyr, Move, State, NewState3),
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveSouth(Plyr, Move, State, NewState3),
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveSE(Plyr, Move, State, NewState3),
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveSW(Plyr, Move, State, NewState3),
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveNE(Plyr, Move, State, NewState3),
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
+
 getState(Plyr, Move, State, NewState, NextPlyr) :-
 	makeMoveNW(Plyr, Move, State, NewState3),
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
+
 getState(Plyr, _, State, State, NextPlyr) :-
-	((Plyr = 2 , NextPlyr = 1) ; (Plyr = 1, NextPlyr = 2)).
+	nextPlayer(Plyr, NextPlyr).
 
-
+nextPlayer(1,2).
+nextPlayer(2,1).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
