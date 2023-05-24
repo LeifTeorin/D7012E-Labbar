@@ -492,7 +492,7 @@ flipEnemiesEast(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	increaseX(X, NewX),
+	NewX is X+1,
 	flipEnemiesEast(Plyr, State, [NewX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesEast(Plyr, State, [X,Y], NewState) :-
@@ -504,7 +504,7 @@ flipEnemiesWest(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	decreaseX(X, NewX),
+	NewX is X-1,
 	flipEnemiesWest(Plyr, State, [NewX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesWest(Plyr, State, [X, Y], NewState) :-
@@ -516,7 +516,7 @@ flipEnemiesNorth(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	decreaseY(Y, NewY),
+	NewY is Y-1,
 	flipEnemiesNorth(Plyr, State, [X, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesNorth(Plyr, State, [X,Y], NewState) :-
@@ -528,7 +528,7 @@ flipEnemiesSouth(Plyr, State, [X, Y], NewState) :-
  	get(State, [X, Y], Enemy),
  	Enemy \= Plyr,
  	Enemy \= '.',
- 	increaseY(Y, NewY),
+	NewY is Y+1,
 	flipEnemiesSouth(Plyr, State, [X, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesSouth(Plyr, State, [X, Y], NewState) :-
@@ -541,7 +541,8 @@ flipEnemiesSE(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	increaseXY(X, Y, NewX, NewY),
+	NewX is X+1,
+	NewY is Y+1,
 	flipEnemiesSE(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesSE(Plyr, State, [X,Y], NewState) :-
@@ -553,7 +554,8 @@ flipEnemiesSW(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	decXIncY(X, Y, NewX, NewY),
+	NewX is X-1,
+	NewY is Y+1,
 	flipEnemiesSW(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesSW(Plyr, State, [X,Y], NewState) :-
@@ -565,7 +567,8 @@ flipEnemiesNE(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	incXDecY(X, Y, NewX, NewY),
+	NewX is X+1,
+	NewY is Y-1,
 	flipEnemiesNE(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesNE(Plyr, State, [X,Y], NewState) :-
@@ -577,7 +580,8 @@ flipEnemiesNW(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
-	decreaseXY(X, Y, NewX, NewY),
+	NewX is X-1,
+	NewY is Y-1,
 	flipEnemiesNW(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 flipEnemiesNW(Plyr, State, [X,Y], NewState) :-
@@ -586,7 +590,7 @@ flipEnemiesNW(Plyr, State, [X,Y], NewState) :-
 	NewState = State, !.
 
 makeMoveEast(Plyr, [X, Y], State, NewState) :-
-	increaseX(X, NextX),
+	NextX is X + 1,
 	get(State, [NextX, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
@@ -594,7 +598,7 @@ makeMoveEast(Plyr, [X, Y], State, NewState) :-
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveWest(Plyr, [X, Y], State, NewState) :-
-	decreaseX(X, NextX),
+	NextX is X - 1,
 	get(State, [NextX, Y], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
@@ -602,7 +606,7 @@ makeMoveWest(Plyr, [X, Y], State, NewState) :-
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNorth(Plyr, [X, Y], State, NewState) :-
-	decreaseY(Y, NextY),
+	NextY is Y-1,
 	get(State, [X, NextY], Enemy),
 	Enemy \= Plyr,
 	Enemy \= .,
@@ -610,12 +614,12 @@ makeMoveNorth(Plyr, [X, Y], State, NewState) :-
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveSouth(Plyr, [X, Y], State, NewState) :-
-	increaseY(Y, NextY),
+	NextY is Y+1,
  	get(State, [X, NextY], Enemy),
  	Enemy \= Plyr,
  	Enemy \= .,
-	 flipEnemiesSouth(Plyr, State, [X, NextY], PartState), !,
-	 set(PartState, NewState, [X, Y], Plyr).
+	flipEnemiesSouth(Plyr, State, [X, NextY], PartState), !,
+	set(PartState, NewState, [X, Y], Plyr).
 
 
 makeMoveSE(Plyr, [X, Y], State, NewState) :-
