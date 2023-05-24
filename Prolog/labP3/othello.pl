@@ -3,15 +3,16 @@
 %    D7012E Declarative languages
 %    Luleå University of Technology
 %
-%    Student full name: <TO BE FILLED IN BEFORE THE GRADING>
-%    Student user id  : <TO BE FILLED IN BEFORE THE GRADING>
+%    Student full name: Hjalmar Olofsson Utsi
+%    Student user id  : hjaolo-9
 %
 /* ------------------------------------------------------- */
 
 
 
 %do not chagne the follwoing line!
-:- ensure_loaded('play.pl').
+%:- ensure_loaded('play.pl').
+:- ensure_loaded('stupid-1.pl').
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -67,11 +68,11 @@
 % given helper: Inital state of the board
 
 initBoard([ [.,.,.,.,.,.],
-            [.,.,.,.,.,.],
-		[.,.,1,2,.,.],
-		[.,.,2,1,.,.],
-            [.,.,.,.,.,.],
-		[.,.,.,.,.,.] ]).
+            [.,1,.,2,.,.],
+			[2,2,2,1,2,.],
+			[.,1,1,2,2,.],
+            [.,1,.,1,1,.],
+			[.,.,.,.,.,.] ]).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -141,9 +142,9 @@ tie(State):-
 %   - true if State is a terminal
 
 terminal(State):-
-	moves(1, State, Plyr1Moves), !,
+	moves(1, State, Plyr1Moves),
 	Plyr1Moves == [n],
-	moves(2, State, Plyr2Moves), !,
+	moves(2, State, Plyr2Moves),
 	Plyr2Moves == [n].
 
 
@@ -195,14 +196,9 @@ getAllPlayerPos(Plyr, [FirstRow | RestOfRows], Y, Positions):-
 	getAllPlayerPos(Plyr, RestOfRows, NextRow, RestRowPositions),
 	append(PlayerRowPositions, RestRowPositions, Positions).
 
-moves(Plyr, State,[n]) :-
-	moves2(Plyr, State, []).
-moves(Plyr, State, MvList) :-
-	moves2(Plyr, State, MvList), !.
-
-moves2(Plyr, State, MvList):-
+getMoves(Plyr, State, MvList):-
 	Plyr = 2,
-	(   getAllPlayerPos(Plyr, State, 0, Positions),
+	getAllPlayerPos(Plyr, State, 0, Positions),
 	movesNorth(Plyr, 1, State, Positions, NorthMoves),
 	movesSouth(Plyr, 1, State, Positions, SouthMoves),
 	movesWest(Plyr, 1, State, Positions, WestMoves),
@@ -210,7 +206,7 @@ moves2(Plyr, State, MvList):-
 	movesNE(Plyr, 1, State, Positions, NEMoves),
 	movesSE(Plyr, 1, State, Positions, SEMoves),
 	movesNW(Plyr, 1, State, Positions, NWMoves),
-	movesSW(Plyr, 1, State, Positions, SWMoves)),
+	movesSW(Plyr, 1, State, Positions, SWMoves),
 	append(NorthMoves, SouthMoves, NorthSouth),
 	append(NorthSouth, WestMoves, MovesNSW),
 	append(MovesNSW, EastMoves, MovesWESN),
@@ -218,11 +214,11 @@ moves2(Plyr, State, MvList):-
 	append(MovesWESNNE, SEMoves, MovesWESNNESE),
 	append(MovesWESNNESE, NWMoves, MovesWESNNESENW),
 	append(MovesWESNNESENW, SWMoves, MVListUnsorted),
-	sort(MVListUnsorted, MvList).
+	sort(MVListUnsorted, MvList), !.
 
-moves2(Plyr, State, MvList):-
+getMoves(Plyr, State, MvList):-
 	Plyr = 1,
-	(   getAllPlayerPos(Plyr, State, 0, Positions),
+	getAllPlayerPos(Plyr, State, 0, Positions),
 	movesNorth(1, 2, State, Positions, NorthMoves),
 	movesSouth(1, 2, State, Positions, SouthMoves),
 	movesWest(1, 2, State, Positions, WestMoves),
@@ -230,7 +226,7 @@ moves2(Plyr, State, MvList):-
 	movesNE(1, 2, State, Positions, NEMoves),
 	movesSE(1, 2, State, Positions, SEMoves),
 	movesNW(1, 2, State, Positions, NWMoves),
-	movesSW(1, 2, State, Positions, SWMoves)),
+	movesSW(1, 2, State, Positions, SWMoves),
 	append(NorthMoves, SouthMoves, NorthSouth),
 	append(NorthSouth, WestMoves, MovesNSW),
 	append(MovesNSW, EastMoves, MovesWESN),
@@ -238,7 +234,13 @@ moves2(Plyr, State, MvList):-
 	append(MovesWESNNE, SEMoves, MovesWESNNESE),
 	append(MovesWESNNESE, NWMoves, MovesWESNNESENW),
 	append(MovesWESNNESENW, SWMoves, MVListUnsorted),
-	sort(MVListUnsorted, MvList).
+	sort(MVListUnsorted, MvList), !.
+
+moves(Plyr, State, [n]):-
+	getMoves(Plyr, State, []).
+
+moves(Plyr, State, Moves):-
+	getMoves(Plyr, State, Moves).
 
 movesNorth(_, _, _, [], []).
 movesNorth(Plyr, Enemy, State, [[X, Y]| RestMoves], Moves):-
@@ -339,7 +341,6 @@ checkNorth(Plyr, Enemy, State, X, Y, notvalid, []):-
 	get(State, [X, Y], Plyr).
 
 
-
 checkSouth(Plyr, Enemy, State, X, Y, Valid, Move):-
 	NewY is Y+1,
 	get(State, [X, NewY], Enemy),
@@ -401,7 +402,7 @@ checkNE(Plyr, Enemy, State, X, Y, Valid, Move):-
 	NewY is Y-1,
 	NewX is X+1,
 	get(State, [NewX, NewY], Enemy),
-	checkNE(Plyr, Enemy, State, X, NewY, Valid, Move).
+	checkNE(Plyr, Enemy, State, NewX, NewY, Valid, Move).
 
 checkNE(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
 	NewY is Y-1,
@@ -423,7 +424,7 @@ checkNW(Plyr, Enemy, State, X, Y, Valid, Move):-
 	NewY is Y-1,
 	NewX is X-1,
 	get(State, [NewX, NewY], Enemy),
-	checkNW(Plyr, Enemy, State, X, NewY, Valid, Move).
+	checkNW(Plyr, Enemy, State, NewX, NewY, Valid, Move).
 
 checkNW(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
 	NewY is Y-1,
@@ -442,14 +443,12 @@ checkNW(Plyr, Enemy, State, X, Y, notvalid, []):-
 
 
 checkSE(Plyr, Enemy, State, X, Y, Valid, Move):-
-	NewY is Y+1,
-	NewX is X+1,
+	increaseXY(X, Y, NewX, NewY),
 	get(State, [NewX, NewY], Enemy),
-	checkSE(Plyr, Enemy, State, X, NewY, Valid, Move).
+	checkSE(Plyr, Enemy, State, NewX, NewY, Valid, Move).
 
 checkSE(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
-	NewY is Y+1,
-	NewX is X+1,
+	increaseXY(X, Y, NewX, NewY),
 	get(State, [X, Y], Enemy),
 	get(State, [NewX, NewY], '.').
 
@@ -457,26 +456,28 @@ checkSE(_, _, State, X, Y, notvalid, []):-
 	get(State, [X, Y], '.').
 
 checkSE(Plyr, Enemy, State, X, Y, notvalid, []):-
-	NewY is Y+1,
-	NewX is X+1,
+	increaseXY(X, Y, NewX, NewY),
 	get(State, [NewX, NewY], Enemy),
 	get(State, [X, Y], Plyr).
 
 
 checkSW(Plyr, Enemy, State, X, Y, Valid, Move):-
-	NewY is Y+1,
-	NewX is X-1,
+	decXIncY(X, Y, NewX, NewY),
 	get(State, [NewX, NewY], Enemy),
-	checkSW(Plyr, Enemy, State, X, NewY, Valid, Move).
+	checkSW(Plyr, Enemy, State, NewX, NewY, Valid, Move).
 
 checkSW(_, Enemy, State, X, Y, valid, [[NewX, NewY]]):-
-	NewY is Y+1,
-	NewX is X-1,
+	decXIncY(X, Y, NewX, NewY),
 	get(State, [X, Y], Enemy),
 	get(State, [NewX, NewY], '.').
 
 checkSW(_, _, State, X, Y, notvalid, []):-
 	get(State, [X, Y], '.').
+
+checkSW(Plyr, Enemy, State, X, Y, notvalid, []):-
+	decXIncY(X, Y, NewX, NewY),
+	get(State, [NewX, NewY], Enemy),
+	get(State, [X, Y], Plyr).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -487,189 +488,183 @@ checkSW(_, _, State, X, Y, notvalid, []):-
 %     state) and NextPlayer (i.e. the next player who will move).
 %
 
-
-
-setEnemiesEast(Plyr, State, [X, Y], NewState) :-
+flipEnemiesEast(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewX is X+1,
-	setEnemiesEast(Plyr, State, [NewX, Y], PartState), !,
+	Enemy \= .,
+	increaseX(X, NewX),
+	flipEnemiesEast(Plyr, State, [NewX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesEast(Plyr, State, [X,Y], NewState) :-
+flipEnemiesEast(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State.
 
-setEnemiesWest(Plyr, State, [X,Y], NewState) :-
+flipEnemiesWest(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewX is X-1,
-	setEnemiesWest(Plyr, State, [NewX, Y], PartState), !,
+	Enemy \= .,
+	decreaseX(X, NewX),
+	flipEnemiesWest(Plyr, State, [NewX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesWest(Plyr, State, [X, Y], NewState) :-
+flipEnemiesWest(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State.
 
-setEnemiesNorth(Plyr, State, [X, Y], NewState) :-
+flipEnemiesNorth(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewY is Y-1,
-	setEnemiesNorth(Plyr, State, [X, NewY], PartState), !,
+	Enemy \= .,
+	decreaseY(Y, NewY),
+	flipEnemiesNorth(Plyr, State, [X, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesNorth(Plyr, State, [X,Y], NewState) :-
+flipEnemiesNorth(Plyr, State, [X,Y], NewState) :-
+	get(State, [X, Y], Player),
+	Player = Plyr,
+	NewState = State.	
+
+flipEnemiesSouth(Plyr, State, [X, Y], NewState) :-
+ 	get(State, [X, Y], Enemy),
+ 	Enemy \= Plyr,
+ 	Enemy \= '.',
+ 	increaseY(Y, NewY),
+	flipEnemiesSouth(Plyr, State, [X, NewY], PartState), !,
+	set(PartState, NewState, [X, Y], Plyr).
+flipEnemiesSouth(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State.
 
-setEnemiesSouth(Plyr, State, [X, Y], NewState) :-
+flipEnemiesSE(Plyr, State, [X, Y], NewState) :-
+	get(State, [X, Y], Enemy),
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewY is Y+1,
-	setEnemiesSouth(Plyr, State, [X, NewY], PartState), !,
+	Enemy \= .,
+	increaseXY(X, Y, NewX, NewY),
+	flipEnemiesSE(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesSouth(Plyr, State, [X, Y], NewState) :-
+flipEnemiesSE(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State.
 
-setEnemiesSE(Plyr, State, [X, Y], NewState) :-
-	get(State, [X, Y], Enemy),
+flipEnemiesSW(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewX is X+1,
-	NewY is Y+1,
-	setEnemiesSE(Plyr, State, [NewX, NewY], PartState), !,
+	Enemy \= .,
+	decXIncY(X, Y, NewX, NewY),
+	flipEnemiesSW(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesSE(Plyr, State, [X,Y], NewState) :-
+flipEnemiesSW(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State.
 
-setEnemiesSW(Plyr, State, [X, Y], NewState) :-
+flipEnemiesNE(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewX is X-1,
-	NewY is Y+1,
-	setEnemiesSW(Plyr, State, [NewX, NewY], PartState), !,
+	Enemy \= .,
+	incXDecY(X, Y, NewX, NewY),
+	flipEnemiesNE(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesSW(Plyr, State, [X,Y], NewState) :-
+flipEnemiesNE(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State.
 
-setEnemiesNE(Plyr, State, [X, Y], NewState) :-
+flipEnemiesNW(Plyr, State, [X, Y], NewState) :-
 	get(State, [X, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	NewX is X+1,
-	NewY is Y-1,
-	setEnemiesNE(Plyr, State, [NewX, NewY], PartState), !,
+	Enemy \= .,
+	decreaseXY(X, Y, NewX, NewY),
+	flipEnemiesNW(Plyr, State, [NewX, NewY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesNE(Plyr, State, [X,Y], NewState) :-
-	get(State, [X, Y], Player),
-	Player = Plyr,
-	NewState = State.
-
-setEnemiesNW(Plyr, State, [X, Y], NewState) :-
-	get(State, [X, Y], Enemy),
-	Enemy \= Plyr,
-	Enemy \= '.',
-	NewX is X-1,
-	NewY = Y-1,
-	setEnemiesNW(Plyr, State, [NewX, NewY], PartState), !,
-	set(PartState, NewState, [X, Y], Plyr).
-setEnemiesNW(Plyr, State, [X,Y], NewState) :-
+flipEnemiesNW(Plyr, State, [X,Y], NewState) :-
 	get(State, [X, Y], Player),
 	Player = Plyr,
 	NewState = State, !.
 
 makeMoveEast(Plyr, [X, Y], State, NewState) :-
-	NextX is X+1,
+	increaseX(X, NextX),
 	get(State, [NextX, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesEast(Plyr, State, [NextX, Y], PartState), !,
+	Enemy \= .,
+	flipEnemiesEast(Plyr, State, [NextX, Y], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveWest(Plyr, [X, Y], State, NewState) :-
-	NextX is X-1,
+	decreaseX(X, NextX),
 	get(State, [NextX, Y], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesWest(Plyr, State, [NextX, Y], PartState),
+	Enemy \= .,
+	flipEnemiesWest(Plyr, State, [NextX, Y], PartState),
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNorth(Plyr, [X, Y], State, NewState) :-
-	NextY is Y-1,
+	decreaseY(Y, NextY),
 	get(State, [X, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesNorth(Plyr, State, [X, NextY], PartState), !,
+	Enemy \= .,
+	flipEnemiesNorth(Plyr, State, [X, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveSouth(Plyr, [X, Y], State, NewState) :-
-	NextY is Y+1,
-	get(State, [X, NextY], Enemy),
-	Enemy \= Plyr,
-	Enemy \= '.',
-	 setEnemiesSouth(Plyr, State, [X, NextY], PartState), !,
+	increaseY(Y, NextY),
+ 	get(State, [X, NextY], Enemy),
+ 	Enemy \= Plyr,
+ 	Enemy \= .,
+	 flipEnemiesSouth(Plyr, State, [X, NextY], PartState), !,
 	 set(PartState, NewState, [X, Y], Plyr).
 
 
 makeMoveSE(Plyr, [X, Y], State, NewState) :-
-	NextX is X+1,
-	NextY is Y+1,
+	increaseXY(X, Y, NextX, NextY),
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesSE(Plyr, State, [NextX, NextY], PartState), !,
+	Enemy \= .,
+	flipEnemiesSE(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveSW(Plyr, [X, Y], State, NewState) :-
-	NextX is X-1,
-	NextY is Y+1,
+	decXIncY(X, Y, NextX, NextY),
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesSW(Plyr, State, [NextX, NextY], PartState), !,
+	Enemy \= .,
+	flipEnemiesSW(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNE(Plyr, [X, Y], State, NewState) :-
-	NextX is X+1,
-	NextY is Y-1,
+	incXDecY(X, Y, NextX, NextY),
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesNE(Plyr, State, [NextX, NextY], PartState), !,
+	Enemy \= .,
+	flipEnemiesNE(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 makeMoveNW(Plyr, [X, Y], State, NewState) :-
-	NextX is X-1,
-	NextY is Y-1,
+	decreaseXY(X, Y, NextX, NextY),
 	get(State, [NextX, NextY], Enemy),
 	Enemy \= Plyr,
-	Enemy \= '.',
-	setEnemiesNW(Plyr, State, [NextX, NextY], PartState), !,
+	Enemy \= .,
+	flipEnemiesNW(Plyr, State, [NextX, NextY], PartState), !,
 	set(PartState, NewState, [X, Y], Plyr).
 
 
-nextState(Plyr, Move, State, NewState, NextPlyr):-
+nextState(Plyr, Move, State, NewState, NextPlyr) :-
+	((Plyr = 2 , NextPlyr = 1) ; (Plyr = 1, NextPlyr = 2)),
+    Move = n,
+    NewState = State.
+
+nextState(Plyr, Move, State, NewState, NextPlyr) :-
 	validmove(Plyr, State, Move),
-	nextPlayer(Plyr, NextPlyr),
 	getState(Plyr, Move, State, NewState, NextPlyr).
 
-getState(Plyr, Move, State, NewState, NextPlyr) :-
-	 makeMoveEast(Plyr, Move, State, NewState1),
-	 getState(Plyr, Move, NewState1, NewState, NextPlyr).
+getState(Plyr, Move, State, NewState, NextPlyr) :-	 
+	makeMoveEast(Plyr, Move, State, NewState1),
+	getState(Plyr, Move, NewState1, NewState, NextPlyr).
 
-getState(Plyr, Move, State, NewState, NextPlyr) :-
+getState(Plyr, Move, State, NewState, NextPlyr) :- 
 	makeMoveWest(Plyr, Move, State, NewState2),
 	getState(Plyr, Move, NewState2, NewState, NextPlyr).
 
@@ -698,10 +693,46 @@ getState(Plyr, Move, State, NewState, NextPlyr) :-
 	getState(Plyr, Move, NewState3, NewState, NextPlyr).
 
 getState(Plyr, _, State, State, NextPlyr) :-
-	nextPlayer(Plyr, NextPlyr).
+	nextPlayer(Plyr,NextPlyr).
 
 nextPlayer(1,2).
 nextPlayer(2,1).
+
+decreaseX(X, XMinusOne) :-
+	XMinusOne is X - 1.
+
+increaseX(X, XPlusOne) :-
+	XPlusOne is X + 1.
+
+decreaseY(Y, YMinusOne) :-
+	YMinusOne is Y - 1.
+
+increaseY(Y, YPlusOne) :-
+	YPlusOne is Y + 1.
+
+increaseXY(X, Y, XPlusOne, YPlusOne):-
+	XPlusOne is X + 1,
+	YPlusOne is Y + 1.
+
+decreaseXY(X, Y, XMinusOne, YMinusOne) :-
+	XMinusOne is X - 1,
+	YMinusOne is Y - 1.
+
+incXDecY(X, Y, XPlusOne, YMinusOne):-
+	XPlusOne is X + 1,
+	YMinusOne is Y - 1.
+
+decXIncY(X, Y, XMinusOne, YPlusOne) :-
+	XMinusOne is X - 1,
+	YPlusOne is Y + 1.
+
+flip(Plyr, Enemy, Board, NewBoard, [EndX, EndY], [CurrX, CurrY]):-
+	((CurrX < EndX, NextX is CurrX + 1);(CurrX > EndX, NextX is CurrX - 1);(CurrX = EndX, NextX is CurrX)),
+	((CurrY < EndY, NextY is CurrY + 1);(CurrY > EndY, NextY is CurrY - 1);(CurrY = EndY, NextY is CurrY)),
+	flip(Plyr, Enemy, Board, TempNewBoard, [EndX, EndY], [NextX, NextY]),
+	set(TempNewBoard, NewBoard, [CurrX, CurrY], Plyr).
+
+flip(_, _, Board, Board, [_, _], [EndX, EndY], [EndX, EndY]).
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -727,21 +758,19 @@ validmove(Plyr, State, Proposed):-
 %   NOTE2. If State is not terminal h should be an estimate of
 %          the value of state (see handout on ideas about
 %          good heuristics.
-
-h(State, -39):-
-	winner(State, 1).
-
-h(State, 39) :-
-	winner(State, 2).
-
-h(State, 0) :-
-	tie(State).
-
 h(State, Val) :-
 	score(State, 1, Player1Score),
 	score(State, 2, Player2Score),
 	Val is Player2Score - Player1Score.
 
+h(State, -99):-
+	winner(State, 1),!.
+
+h(State, 99) :-
+	winner(State, 2),!.
+
+h(State, 0) :-
+	tie(State), !.
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
 %
@@ -752,7 +781,7 @@ h(State, Val) :-
 %     of all states.
 
 
-lowerBound(-40).
+lowerBound(-100).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.
@@ -764,7 +793,7 @@ lowerBound(-40).
 %     of all states.
 
 
-upperBound(40).
+upperBound(100).
 
 
 % DO NOT CHANGE THIS BLOCK OF COMMENTS.

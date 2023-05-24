@@ -108,7 +108,7 @@ getmove(1,State,Move) :-
     % writeln(Perm), % uncomment to see all empty squares
     member(Proposed,Perm), % try one square at a time
     Proposed = [X, Y],
-    ProposedNewFormat = (X, Y),
+    ProposedNewFormat = [X, Y],
     write('Stupid is trying move '),write(ProposedNewFormat),
     (validmove(1,State,ProposedNewFormat)
         -> !, Move = ProposedNewFormat, nl
@@ -129,7 +129,7 @@ getmove(2,State,Move) :-
     showState(State),
     currentScoreXYZ(State),
     writeln('Computer is moving...'),
-    MaxDepth is 10,
+    MaxDepth is 4,
     mmeval(2,State,_,Move,MaxDepth,SeF),
     write('Computer move computed by searching '),
     write(SeF),
